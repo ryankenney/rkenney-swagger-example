@@ -1,0 +1,36 @@
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://java.sun.com/xml/ns/javaee"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+	version="3.0">
+
+	<display-name>Ryan Kenney's Swagger Example</display-name>
+
+	<!-- Specify the base  URL path of the JAX-RS application -->
+	<context-param>
+		<param-name>resteasy.servlet.mapping.prefix</param-name>
+		<param-value>/api</param-value>
+	</context-param>
+
+	<!-- Load the main JAX-RS application as a servlet -->
+	<servlet>
+		<servlet-name>resteasy</servlet-name>
+		<servlet-class>org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher</servlet-class>
+		<init-param>
+			<param-name>javax.ws.rs.Application</param-name>
+			<param-value>com.github.ryankenney.rkenney_swagger_example.JaxRsServlet</param-value>
+		</init-param>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>resteasy</servlet-name>
+		<url-pattern>/api/*</url-pattern>
+	</servlet-mapping>
+
+	<!-- Load the a servlet that generates our Swagger definition of the services -->
+	<servlet>
+		<servlet-name>Bootstrap</servlet-name>
+		<servlet-class>com.github.ryankenney.rkenney_swagger_example.SwaggerDescriptorServlet</servlet-class>
+		<load-on-startup>2</load-on-startup>
+	</servlet>
+
+</web-app>

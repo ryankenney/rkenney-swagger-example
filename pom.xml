@@ -1,0 +1,143 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>org.github.ryankenney</groupId>
+	<version>0.1-SNAPSHOT</version>
+	<artifactId>rkenney-swagger-example</artifactId>
+	<packaging>war</packaging>
+	<description>An example java war with Swagger docs and embedded Swagger-UI</description>
+
+	<properties>
+		<resteasy.version>3.0.16.Final</resteasy.version>
+		<maven.compiler.target>1.8</maven.compiler.target>
+		<maven.compiler.source>1.8</maven.compiler.source>
+	</properties>
+
+	<dependencies>
+
+		<dependency>
+			<groupId>io.swagger</groupId>
+			<artifactId>swagger-jaxrs</artifactId>
+			<version>1.5.21</version>
+		</dependency>
+
+		<!--
+			JAX-RS is a standard library for defining REST endpoints via Java annotations.
+			Swagger understands these annotations.
+		-->
+		<dependency>
+			<groupId>org.jboss.resteasy</groupId>
+			<artifactId>resteasy-jaxrs</artifactId>
+			<version>${resteasy.version}</version>
+		</dependency>
+
+		<!--
+			JAX-B is a standard library for defining POJO XML-based scheams via 
+			Java annotations. Swagger understands these annotations, from which is builds 
+			relevant Swagger schemas.
+		-->
+		<dependency>
+			<groupId>org.jboss.resteasy</groupId>
+			<artifactId>resteasy-jaxb-provider</artifactId>
+			<version>${resteasy.version}</version>
+		</dependency>
+
+		<!--
+			Jettison provides a mechanism for automatically marshalling
+			(XML-centric) JAX-B annotated objects as JSON, from JAX-RS web services.
+		-->
+		<dependency>
+			<groupId>org.jboss.resteasy</groupId>
+			<artifactId>resteasy-jettison-provider</artifactId>
+			<version>${resteasy.version}</version>
+		</dependency>
+		
+		<!--
+			The servlet API is a standard API for Java web containers, but be careful
+			to match this version to the version supported by your container.
+		-->
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>servlet-api</artifactId>
+			<version>2.4</version>
+			<scope>provided</scope>
+		</dependency>
+		
+	</dependencies>
+
+	<build>
+		<finalName>${project.artifactId}</finalName>
+
+		<plugins>
+
+			<!--
+				This loads node/npm via maven, then runs npm install (per package.json),
+				which then downloads swagger's front-end (to node_modules), which
+				we can later load into our war.
+				
+				We opt for this instead of a direct-download of swagger from github
+				because we can more easily route npm requests to a private repo on
+				disconnected networks.
+			-->
+			<plugin>
+				<groupId>com.github.eirslett</groupId>
+				<artifactId>frontend-maven-plugin</artifactId>
+				<version>1.6</version>
+				<configuration>
+					<!-- LTS version of nodejs -->
+					<nodeVersion>v6.11.4</nodeVersion>
+				</configuration>
+				<executions>
+					<execution>
+						<id>install node and npm</id>
+						<goals>
+							<goal>install-node-and-npm</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>npm install</id>
+						<goals>
+							<goal>npm</goal>
+						</goals>
+						<configuration>
+							<arguments>install</arguments>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!--
+				This copies the swagger's front-end into our war.
+				We could just check-in the source.
+			-->
+			<plugin>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>2.6</version>
+				<executions>
+					<execution>
+						<id>copy-resources</id>
+						<phase>compile</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>target/${project.artifactId}</outputDirectory>
+							<resources>
+								<resource>
+									<directory>node_modules/swagger-ui-dist</directory>
+									<filtering>true</filtering>
+									<!-- We have our own index.html that points at our service descriptor. -->
+									<excludes>
+										<exclude>index.html</exclude>
+									</excludes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+		</plugins>
+	</build>
+
+</project>
